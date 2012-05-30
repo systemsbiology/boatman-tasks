@@ -36,6 +36,7 @@ perkinelmer_scans_folder.check_every 5.minutes do
     end
   end
 
+  # Exiqon arrays
   folders_matching /^(\d{8})_(\d{6})$/ do |folder|
     match_data = folder.match_data
 
@@ -63,6 +64,9 @@ perkinelmer_scans_folder.check_every 5.minutes do
 
   # scans that aren't spotted arrays or Exiqon
   folders_matching /^(.*)$/ do |folder|
+    base_name = File.basename(folder.path)
+    next if base_name =~ /^(\d{5})_(\d{6})(_sybr)*$/ || base_name =~ /^(\d{8})_(\d{6})(_sybr)*$/
+
     match_data = folder.match_data
 
     slide_name = match_data[1]
@@ -71,6 +75,7 @@ perkinelmer_scans_folder.check_every 5.minutes do
       files_ending_with "tif" do |tif_image|
         image_folder = "Images"
         
+        new_image_name = slide_name + "-" + File.basename(tif_image.path)
         new_image_path = [
           scan_storage_folder,
           "Other_Numbers",
@@ -78,7 +83,7 @@ perkinelmer_scans_folder.check_every 5.minutes do
           image_folder
         ].join("/")
 
-        copy tif_image, :to => new_image_path
+        copy tif_image, :to => new_image_path, :rename => new_image_name
       end
     end
   end
